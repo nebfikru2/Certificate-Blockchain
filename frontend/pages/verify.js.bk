@@ -1,0 +1,73 @@
+import { useState } from "react";
+import Link from "next/link";
+export default function VerifyCertificate() {
+	const [certificateId, setCertificateId] = useState("");
+	const [result, setResult] = useState(null);
+	const [error, setError] = useState("");
+
+	const handleVerify = async (e) => {
+		e.preventDefault();
+		setResult(null);
+		setError("");
+		try {
+			const res = await fetch(
+				`http://localhost:4000/api/verify?certificateId=${encodeURIComponent(
+					certificateId
+				)}`
+			);
+			const data = await res.json();
+			if (res.ok) {
+				if (data.valid) {
+					setResult(data.certificate);
+				} else {
+					setError(data.message || "Certificate not found or invalid");
+				}
+			} else {
+				setError(data.error || "Error verifying certificate");
+			}
+		} catch (err) {
+			setError("Network error: " + err.message);
+		}
+	};
+
+	return (
+		<div style={{ maxWidth: 600, margin: "auto", padding: 20 }}>
+			<h1>Verify Certificate</h1>
+			<form onSubmit={handleVerify}>
+				<label>
+					Certificate ID:
+					<input
+						type="text"
+						value={certificateId}
+						onChange={(e) => setCertificateId(e.target.value)}
+						required
+					/>
+				</label>
+				<br />
+				<button type="submit">Verify</button>
+				<Link href="/">Home</Link>
+			</form>
+			{error && <p style={{ color: "red" }}>{error}</p>}
+			{result && (
+				<div>
+					<h2>Certificate Details</h2>
+					<p>
+						<strong>Certificate ID:</strong> {result.certificateId}
+					</p>
+					<p>
+						<strong>University:</strong> {result.university}
+					</p>
+					<p>
+						<strong>Student Name:</strong> {result.studentName}
+					</p>
+					<p>
+						<strong>Course:</strong> {result.course}
+					</p>
+					<p>
+						<strong>Date of Issue:</strong> {result.date}
+					</p>
+				</div>
+			)}
+		</div>
+	);
+}
